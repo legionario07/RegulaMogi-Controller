@@ -192,41 +192,6 @@ public class RepositoryDao implements IDAO {
 		return pacienteRetorno;
 	}
 
-	/**
-	 * Metodo que encontra todas as solicitacoes de um paciente
-	 * 
-	 * @param unidade
-	 * @return List de EntidadeDominio contendos os pacientes encontrados
-	 */
-	@SuppressWarnings("unchecked")
-	public List<EntidadeDominio> findSolicitacoesByPaciente(Paciente paciente) {
-
-		List<EntidadeDominio> listaSolicitacoes = new ArrayList<>();
-
-		StringBuilder sql = new StringBuilder();
-
-		sql.append("SELECT * FROM regulamogi.paciente_solicitacao ");
-		sql.append("inner join paciente on paciente.id = paciente_solicitacao.Paciente_id ");
-		sql.append("where paciente.SIS = ?");
-
-		session = HibernateUtil.getSession();
-		try {
-
-			Query query = session.createQuery(sql.toString());
-			query.setParameter(0, paciente.getSIS());
-
-			listaSolicitacoes = query.getResultList();
-
-		} catch (NoResultException nre) {
-			return null;
-		} catch (Exception e) {
-			System.out.println("Erro ao Pesquisar objeto no Banco de Dados - \n" + e.getMessage());
-		} finally {
-			session.close();
-		}
-
-		return listaSolicitacoes;
-	}
 	
 
 	/**
@@ -263,6 +228,9 @@ public class RepositoryDao implements IDAO {
 
 		return listaSolicitacoes;
 	}
+	
+	
+	
 
 
 }

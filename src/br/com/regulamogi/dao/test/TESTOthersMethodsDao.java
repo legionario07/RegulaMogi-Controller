@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import br.com.regulamogi.dao.RepositoryDao;
 import br.com.regulamogi.domain.EntidadeDominio;
 import br.com.regulamogi.domain.Paciente;
 import br.com.regulamogi.domain.Solicitacao;
+import br.com.regulamogi.domain.UnidadeDeSaude;
 
 public class TESTOthersMethodsDao {
 
@@ -22,17 +24,30 @@ public class TESTOthersMethodsDao {
 		dao = new RepositoryDao();
 	}
 	
-	@Test
-	public void findSolicitacoesByPaciente(){
+	@Ignore
+	public void findSolicitacoesByNumeroMemorando(){
 	
 		Paciente paciente = new Paciente();
 		paciente.setSIS("111111");
 		paciente = dao.findPacienteBySIS(paciente);
 		
-		lista = dao.findSolicitacoesByPaciente(paciente);
+		UnidadeDeSaude u = new UnidadeDeSaude(2l);
 		
-		for(EntidadeDominio e : lista){
-			System.out.println(((Solicitacao) e).getDataConsulta());
+		lista = dao.findSolicitacoesByNumeroMemorando("01/2017", u);
+		
+		System.out.println(lista.size());
+		
+	}
+	
+	@Test
+	public void findPacienteBySIS(){
+		
+		Paciente paciente = new Paciente();
+		paciente.setSIS("111111");
+		paciente = dao.findPacienteBySIS(paciente);
+		
+		for(Solicitacao s : paciente.getSolicitacoes()){
+			System.out.println(s.getNumeroMemorando());
 		}
 		
 	}
