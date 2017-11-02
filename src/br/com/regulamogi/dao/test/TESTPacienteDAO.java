@@ -28,6 +28,7 @@ public class TESTPacienteDAO {
 		
 	}
 	
+	
 	@Ignore
 	public void testSave(){
 		
@@ -41,7 +42,7 @@ public class TESTPacienteDAO {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testUpdate(){
 		paciente = new Paciente();
 		paciente = PacienteBuilder.getEntity();
@@ -74,7 +75,7 @@ public class TESTPacienteDAO {
 		
 	}
 	
-	@Ignore
+	@Test
 	public void testFindBySIS(){
 		paciente = new Paciente(2l);
 		paciente.setSIS("111111");
@@ -82,6 +83,7 @@ public class TESTPacienteDAO {
 		paciente = (Paciente) dao.findPacienteBySIS(paciente);
 		
 		System.out.println(paciente.getId());
+		System.out.println(paciente.getConta().getPerfil().getPerfil());
 		System.out.println(paciente.getSolicitacoes().size());
 	}
 	
