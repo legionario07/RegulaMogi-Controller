@@ -28,7 +28,7 @@ public class TESTPerfilDAO {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testSave(){
 		
 		perfil = new Perfil();

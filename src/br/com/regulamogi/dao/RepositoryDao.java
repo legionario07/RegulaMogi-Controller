@@ -1,5 +1,9 @@
 package br.com.regulamogi.dao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,9 +12,12 @@ import javax.persistence.Query;
 
 import org.hibernate.Session;
 
+import br.com.regulamogi.domain.Conta;
 import br.com.regulamogi.domain.EntidadeDominio;
 import br.com.regulamogi.domain.Paciente;
+import br.com.regulamogi.domain.Perfil;
 import br.com.regulamogi.domain.UnidadeDeSaude;
+import br.com.regulamogi.factory.ConnectionFactory;
 import br.com.regulamogi.factory.HibernateUtil;
 
 public class RepositoryDao implements IDAO {
@@ -137,9 +144,9 @@ public class RepositoryDao implements IDAO {
 		Paciente pacienteRetorno = new Paciente();
 
 		StringBuilder sql = new StringBuilder();
-		sql.append("from Colaborador c ");
-		sql.append("where c.usuario.login = ? and ");
-		sql.append("c.usuario.senha = md5(?)");
+		sql.append("from Paciente p ");
+		sql.append("where p.conta.login = ? and ");
+		sql.append("p.conta.senha = md5(?)");
 
 		session = HibernateUtil.getSession();
 		try {
@@ -192,11 +199,10 @@ public class RepositoryDao implements IDAO {
 		return pacienteRetorno;
 	}
 
-	
-
 	/**
-	 * Metodo que retorna todos os paciente de um determinado memorando
-	 * de uma especifica UnidadeDeSaude
+	 * Metodo que retorna todos os paciente de um determinado memorando de uma
+	 * especifica UnidadeDeSaude
+	 * 
 	 * @param numeroMemorando
 	 * @return List entidadeDominio contendo todas as solicitacoes
 	 */
@@ -204,7 +210,7 @@ public class RepositoryDao implements IDAO {
 	public List<EntidadeDominio> findSolicitacoesByNumeroMemorando(String numeroMemorando, UnidadeDeSaude unidade) {
 
 		List<EntidadeDominio> listaSolicitacoes = new ArrayList<>();
-		
+
 		StringBuilder sql = new StringBuilder();
 		sql.append("from Solicitacao ");
 		sql.append("where numeroMemorando = ? and unidadeDeSaude_id = ?");
@@ -216,7 +222,7 @@ public class RepositoryDao implements IDAO {
 			query.setParameter(0, numeroMemorando);
 			query.setParameter(1, unidade.getId());
 
-			listaSolicitacoes =query.getResultList();
+			listaSolicitacoes = query.getResultList();
 
 		} catch (NoResultException nre) {
 			return null;
@@ -228,9 +234,109 @@ public class RepositoryDao implements IDAO {
 
 		return listaSolicitacoes;
 	}
-	
-	
-	
 
+
+	/**
+	 * 
+	 * @param entidade
+	 * @return
+	 */
+	public EntidadeDominio findBySISAndCelular(EntidadeDominio entidade) {
+
+		Paciente paciente = null;
+
+		if (!(entidade instanceof Paciente))
+			return null;
+
+		paciente = new Paciente();
+		paciente = (Paciente) entidade;
+
+		Paciente pacienteRetorno = new Paciente();
+		//
+		//// select fb
+		// from FooBar fb
+		// left join fb.tags t
+		// where t in ( :queryTags )
+		//
+		StringBuilder sql = new StringBuilder();
+		sql.append("select pes from Paciente pes left join Telefone ");
+		sql.append("t where pes.conta.login = ? AND t.numero = ? ");
+		sql.append("and t.tipo = 'CELULAR'");
+
+		session = HibernateUtil.getSession();
+		try {
+
+			Query query = session.createQuery(sql.toString());
+			query.setParameter(0, paciente.getConta().getLogin().toUpperCase());
+			query.setParameter(1, paciente.getTelefones().get(0).getNumero());
+
+			pacienteRetorno = (Paciente) query.getSingleResult();
+
+		} catch (NoResultException nre) {
+			return null;
+		} catch (Exception e) {
+			System.out.println("Usuario ou senha Inválidos - \n" + e.getMessage());
+			return null;
+		} finally {
+			session.close();
+		}
+
+		return pacienteRetorno;
+	}
+
+	/**
+	 * 
+	 * @param e
+	 * @return
+	 */
+	public UnidadeDeSaude login(EntidadeDominio e) {
+
+		UnidadeDeSaude unidade = null;
+		
+		UnidadeDeSaude u = new UnidadeDeSaude();
+		u = (UnidadeDeSaude) e;
+
+		StringBuilder sql = new StringBuilder();
+		sql.append("select * from conta ");
+		sql.append("inner join unidadedesaude_conta on unidadedesaude_conta.contas_id = conta.id ");
+		sql.append("inner join unidadedesaude on unidadedesaude.id = unidadedesaude_conta.UnidadeDeSaude_id ");
+		sql.append("where conta.login = ? and conta.senha = md5(?) ");
+
+		Connection connection = ConnectionFactory.getConnection();
+		try {
+			PreparedStatement ps = connection.prepareStatement(sql.toString());
+			ps.setString(1, u.getContas().get(0).getLogin().toUpperCase());
+			ps.setString(2, u.getContas().get(0).getSenha());
+
+			ResultSet rSet = ps.executeQuery();
+
+			if (rSet.next()) {
+				Conta conta = new Conta(rSet.getLong("contas_id"));
+				Perfil p = new Perfil(rSet.getLong("perfil_id"));
+				conta.setPerfil(p);
+				
+				unidade = new UnidadeDeSaude(rSet.getLong("UnidadeDeSaude_id"));
+				List<Conta> contas = new ArrayList<>();
+				contas.add(conta);
+				unidade.setContas(contas);
+				
+			}
+
+		} catch (NoResultException nre) {
+			return null;
+		} catch (Exception ex) {
+			System.out.println("Erro ao Pesquisar objeto no Banco de Dados - \n" + ex.getMessage());
+			return null;
+		} finally {
+			try {
+				connection.close();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		return unidade;
+	}
 
 }

@@ -68,7 +68,7 @@ public class TESTUnidadeDeSaudeDAO {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testFindAll(){
 		lista = dao.findAll(new UnidadeDeSaude());
 		
@@ -79,6 +79,23 @@ public class TESTUnidadeDeSaudeDAO {
 			System.out.println(((UnidadeDeSaude) e) .getContas().get(0).getLogin());
 			
 		}
+		
+	}
+	
+	@Test
+	public void login(){
+		unidade = new UnidadeDeSaude();
+		Conta conta = new Conta();
+		conta.setLogin("UBSJUNDIAPEBA");
+		conta.setSenha("123");
+		unidade.getContas().add(conta);
+		
+		unidade = (UnidadeDeSaude) dao.login(unidade);
+		if(unidade != null){
+			unidade = (UnidadeDeSaude) dao.find(unidade);
+		}
+		
+		System.out.println(unidade.getNomeUnidade());
 		
 	}
 	
