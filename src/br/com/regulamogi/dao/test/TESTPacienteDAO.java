@@ -3,6 +3,7 @@ package br.com.regulamogi.dao.test;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import org.junit.Before;
@@ -11,8 +12,10 @@ import org.junit.Test;
 
 import br.com.regulamogi.builder.PacienteBuilder;
 import br.com.regulamogi.dao.RepositoryDao;
+import br.com.regulamogi.domain.Conta;
 import br.com.regulamogi.domain.EntidadeDominio;
 import br.com.regulamogi.domain.Paciente;
+import br.com.regulamogi.domain.Perfil;
 import br.com.regulamogi.domain.Telefone;
 
 public class TESTPacienteDAO {
@@ -30,15 +33,37 @@ public class TESTPacienteDAO {
 	}
 	
 	
-	@Ignore
+	@Test
 	public void testSave(){
 		
-		paciente = new Paciente();
-		paciente = PacienteBuilder.getEntity();
-		
-		paciente.setId(dao.save(paciente));
-		
-		assertEquals(Long.valueOf(2), paciente.getId());
+	     Paciente p = new Paciente();
+	        p.setLastLogin(Calendar.getInstance());
+	        p.setNome("teste");
+	        p.setSIS("222");
+
+	        List<Telefone> telefones = new ArrayList<>();
+	        Telefone t = new Telefone(2l);
+//	        t.setNumero("(11)21342");
+//	        t.setTelefoneType(TelefoneType.CELULAR);
+
+	        Telefone t2 = new Telefone(1l);
+//	        t2.setNumero("(11)2134231");
+//	        t2.setTelefoneType(TelefoneType.RESIDENCIAL);
+
+	        telefones.add(t);
+	        telefones.add(t2);
+
+
+	        Perfil perfil = new Perfil();
+	        perfil.setPerfil("PACIENTE");
+	        Conta conta = new Conta();
+	        conta.setLogin("222");
+	        conta.setPerfil(perfil);
+	        
+	        p.setTelefones(telefones);
+	        p.setConta(conta);
+	       
+	        System.out.println(new RepositoryDao().save(p.getConta()));
 		
 		
 	}
@@ -101,7 +126,7 @@ public class TESTPacienteDAO {
 		System.out.println(paciente.getTelefones().size());
 	}
 	
-	@Test
+	@Ignore
 	public void findPacienteBySISAndCelular(){
 		paciente = new Paciente();
 		
