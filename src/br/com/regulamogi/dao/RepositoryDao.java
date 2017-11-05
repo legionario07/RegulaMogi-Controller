@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -252,12 +254,6 @@ public class RepositoryDao implements IDAO {
 		paciente = (Paciente) entidade;
 
 		Paciente pacienteRetorno = new Paciente();
-		//
-		//// select fb
-		// from FooBar fb
-		// left join fb.tags t
-		// where t in ( :queryTags )
-		//
 		StringBuilder sql = new StringBuilder();
 		sql.append("select pes from Paciente pes left join Telefone ");
 		sql.append("t where pes.conta.login = ? AND t.numero = ? ");
@@ -338,5 +334,90 @@ public class RepositoryDao implements IDAO {
 
 		return unidade;
 	}
+	
+    public Long savePacienteSemConta(EntidadeDominio entidade) {
+        if (!(entidade instanceof Paciente)) {
+            return 0l;
+        }
+
+        Paciente paciente = new Paciente();
+        paciente = (Paciente) entidade;
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("INSERT INTO paciente ");
+        sql.append("(SIS, lastLogin, nome) VALUES (?,?,?) ");
+
+        Connection con = ConnectionFactory.getConnection();
+        try {
+            if (con == null || con.isClosed()) {
+                con = ConnectionFactory.getConnection();
+            }
+        } catch (SQLException e1) {
+            System.out.println(e1.getMessage());
+        }
+
+        PreparedStatement pstm;
+        try {
+            pstm = con.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS);
+            int i = 0;
+            
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String data = sdf.format(paciente.getLastLogin().getTime());
+            
+            pstm.setString(++i, paciente.getSIS());
+            pstm.setString(++i, data);
+            pstm.setString(++i, paciente.getNome().toUpperCase());
+
+            pstm.executeUpdate();
+
+            ResultSet rs = pstm.getGeneratedKeys();
+            if (rs.next()) {
+                paciente.setId(rs.getLong(1));
+            }
+            rs.close();
+            pstm.close();
+            con.close();
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            return 0l;
+        }
+
+        return paciente.getId();
+    }
+    
+    public void saveTabelaPacientesESolicitacoes(Long idPaciente, Long idSolicitacao) {
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("INSERT INTO paciente_solicitacao ");
+        sql.append("(Paciente_id, solicitacoes_id) VALUES (?,?) ");
+
+        Connection con = ConnectionFactory.getConnection();
+        try {
+            if (con == null || con.isClosed()) {
+                con = ConnectionFactory.getConnection();
+            }
+        } catch (SQLException e1) {
+            System.out.println(e1.getMessage());
+        }
+
+        PreparedStatement pstm;
+        try {
+            pstm = con.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS);
+            int i = 0;
+            
+            pstm.setLong(++i, idPaciente);
+            pstm.setLong(++i, idSolicitacao);
+
+            pstm.executeUpdate();
+
+            pstm.close();
+            con.close();
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
 
 }

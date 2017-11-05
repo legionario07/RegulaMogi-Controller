@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import br.com.regulamogi.dao.RepositoryDao;
 import br.com.regulamogi.domain.Especialidade;
 import br.com.regulamogi.domain.PrioridadeType;
 import br.com.regulamogi.domain.Solicitacao;
@@ -19,6 +20,9 @@ public class SolicitacaoBuilder {
 	public static Solicitacao getEntity(){
 		
 		solicitacao = new Solicitacao();
+
+		solicitacao.setNumeroSIS("140919");
+		
 		solicitacao.setDataConsulta(Calendar.getInstance());
 		
 		String data = "31/10/2017";
@@ -33,12 +37,19 @@ public class SolicitacaoBuilder {
 		c.setTime(dataEnvio);
 		
 		solicitacao.setDataEnvio(c);
-		solicitacao.setEspecialidade(new Especialidade(3l));
+		Especialidade e = new Especialidade(2l);
+		e = (Especialidade) new RepositoryDao().find(e);
+		
+		solicitacao.setEspecialidade(e);
 		
 		solicitacao.setNumeroMemorando("02/2017");
 		solicitacao.setPrioridade(PrioridadeType.URGENTE);
 		solicitacao.setStatus(StatusType.ENVIADO);
-		solicitacao.setUnidadeDeSaude(new UnidadeDeSaude(1l));
+		
+		UnidadeDeSaude u = new UnidadeDeSaude(1l);
+		u = (UnidadeDeSaude) new RepositoryDao().login(u);
+		
+		solicitacao.setUnidadeDeSaude(u);
 		
 		return solicitacao;
 	}

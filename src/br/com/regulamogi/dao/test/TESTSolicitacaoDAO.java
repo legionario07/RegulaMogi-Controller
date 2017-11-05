@@ -41,7 +41,7 @@ public class TESTSolicitacaoDAO {
 		
 	}
 	
-	@Test
+	@Ignore
 	public void testUpdate(){
 		solicitacao = new Solicitacao();
 		solicitacao = SolicitacaoBuilder.getEntity();
@@ -67,7 +67,7 @@ public class TESTSolicitacaoDAO {
 		for(EntidadeDominio e : lista){
 			
 			System.out.println(((Solicitacao) e) .getId());
-			System.out.println(((Solicitacao) e) .getNumeroMemorando());
+			System.out.println(((Solicitacao) e) .getNumeroSIS());
 			
 		}
 		
