@@ -31,7 +31,7 @@ public class TESTPacienteDAO {
 	}
 	
 	
-	@Test
+	@Ignore
 	public void testSave(){
 		
 //	     Paciente p = new Paciente();
@@ -159,5 +159,17 @@ public class TESTPacienteDAO {
 		System.out.println(paciente.getTelefones().size());
 	}
 	
+	@Test
+	public void pesquisarSolicitacoesBySIS(){
+		
+		Paciente p = new Paciente();
+		p.setSIS("166");
+		
+		p= dao.findPacienteBySIS(p);
+		
+		System.out.println(p.getSolicitacoes().size());
+		
+		
+	}
 	
 }
