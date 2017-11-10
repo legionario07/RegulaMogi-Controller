@@ -52,7 +52,7 @@ public class TESTUnidadeDeSaudeDAO {
 		Conta conta = new Conta(10l);
 		
 		contas.add(conta);
-		unidade.setContas(contas);
+		//unidade.setContas(contas);
 		
 		assertEquals(true, dao.update(unidade));
 		
@@ -76,7 +76,7 @@ public class TESTUnidadeDeSaudeDAO {
 			
 			System.out.println(((UnidadeDeSaude) e) .getId());
 			System.out.println(((UnidadeDeSaude) e) .getNomeUnidade());
-			System.out.println(((UnidadeDeSaude) e) .getContas().get(0).getLogin());
+		//	System.out.println(((UnidadeDeSaude) e) .getContas().get(0).getLogin());
 			
 		}
 		
@@ -86,16 +86,13 @@ public class TESTUnidadeDeSaudeDAO {
 	public void login(){
 		unidade = new UnidadeDeSaude();
 		Conta conta = new Conta();
-		conta.setLogin("UBSJUNDIAPEBA");
+		conta.setLogin("PROMULHER");
 		conta.setSenha("123");
-		unidade.getContas().add(conta);
+		unidade.setConta(conta);
 		
 		unidade = (UnidadeDeSaude) dao.login(unidade);
-		if(unidade != null){
-			unidade = (UnidadeDeSaude) dao.find(unidade);
-		}
-		
 		System.out.println(unidade.getNomeUnidade());
+		System.out.println(unidade.getConta().getSenha());
 		
 	}
 	

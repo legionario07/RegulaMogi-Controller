@@ -133,18 +133,19 @@ public class TESTPacienteDAO {
 		System.out.println(paciente.getTelefones().size());
 	}
 	
-	@Ignore
+	@Test
 	public void findPacienteBySISAndCelular(){
 		paciente = new Paciente();
 		
 		paciente.getConta().setLogin("111111");
+		paciente.setSIS("140919");
 		
 		Telefone t = new Telefone();
-		t.setNumero("11971986033");
+		t.setNumero("(11)971986033");
 		
 		paciente.getTelefones().add(t);
 		
-		paciente = (Paciente) dao.findPacienteBySIS(paciente);
+		paciente = (Paciente) dao.findBySISAndCelular(paciente);
 		
 //		if(paciente!=null && paciente.getId() > 0){
 //			for(Telefone telefone : paciente.getTelefones()){
@@ -159,7 +160,7 @@ public class TESTPacienteDAO {
 		System.out.println(paciente.getTelefones().size());
 	}
 	
-	@Test
+	@Ignore
 	public void pesquisarSolicitacoesBySIS(){
 		
 		Paciente p = new Paciente();

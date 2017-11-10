@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import javax.persistence.NoResultException;
@@ -17,10 +18,12 @@ import org.hibernate.Session;
 import br.com.regulamogi.domain.Conta;
 import br.com.regulamogi.domain.EntidadeDominio;
 import br.com.regulamogi.domain.Paciente;
-import br.com.regulamogi.domain.Perfil;
+import br.com.regulamogi.domain.Telefone;
+import br.com.regulamogi.domain.TelefoneType;
 import br.com.regulamogi.domain.UnidadeDeSaude;
 import br.com.regulamogi.factory.ConnectionFactory;
 import br.com.regulamogi.factory.HibernateUtil;
+import br.com.regulamogi.utils.EncryptMD5Util;
 
 public class RepositoryDao implements IDAO {
 
@@ -253,20 +256,45 @@ public class RepositoryDao implements IDAO {
 		paciente = new Paciente();
 		paciente = (Paciente) entidade;
 
-		Paciente pacienteRetorno = new Paciente();
+		Paciente pacienteRetorno = null;
 		StringBuilder sql = new StringBuilder();
-		sql.append("select pes from Paciente pes left join Telefone ");
-		sql.append("t where pes.conta.login = ? AND t.numero = ? ");
-		sql.append("and t.tipo = 'CELULAR'");
+		
+		Connection con = ConnectionFactory.getConnection();
 
-		session = HibernateUtil.getSession();
+		sql.append("select * from Paciente ");
+		sql.append("inner join Paciente_Telefone on Paciente_Telefone.Paciente_id = Paciente.id ");
+		sql.append("INNER JOIN Telefone on Telefone.id = Paciente_Telefone.telefones_id ");
+		sql.append("WHERE Telefone.telefoneType = ? and Paciente.SIS = ? and Telefone.numero = ? ");
+
 		try {
 
-			Query query = session.createQuery(sql.toString());
-			query.setParameter(0, paciente.getConta().getLogin().toUpperCase());
-			query.setParameter(1, paciente.getTelefones().get(0).getNumero());
+			PreparedStatement ps = con.prepareStatement(sql.toString());
+			ps.setString(1, TelefoneType.CELULAR.getDescricao());
+			ps.setString(2, paciente.getSIS());
+			ps.setString(3, paciente.getTelefones().get(0).getNumero());
 
-			pacienteRetorno = (Paciente) query.getSingleResult();
+			ResultSet rSet = ps.executeQuery();
+
+			if (rSet.next()) {
+				
+				pacienteRetorno = new Paciente();
+				pacienteRetorno.setId(rSet.getLong("Paciente_id"));
+				pacienteRetorno.setSIS(rSet.getString("SIS"));
+				SimpleDateFormat s = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+				String data = s.format(rSet.getDate("lastLogin"));
+				Calendar c = Calendar.getInstance();
+				c.setTime(s.parse(data));
+				pacienteRetorno.setLastLogin(c);
+				pacienteRetorno.setNome(rSet.getString("nome"));
+				
+				Conta conta = new Conta(rSet.getLong("conta_id"));
+				
+				Telefone telefone = new Telefone(rSet.getLong("telefones_id"));
+				
+				pacienteRetorno.setConta(conta);
+				pacienteRetorno.getTelefones().add(telefone);
+				
+			}
 
 		} catch (NoResultException nre) {
 			return null;
@@ -274,7 +302,12 @@ public class RepositoryDao implements IDAO {
 			System.out.println("Usuario ou senha Inválidos - \n" + e.getMessage());
 			return null;
 		} finally {
-			session.close();
+			try {
+				con.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 		return pacienteRetorno;
@@ -293,30 +326,20 @@ public class RepositoryDao implements IDAO {
 		u = (UnidadeDeSaude) e;
 
 		StringBuilder sql = new StringBuilder();
-		sql.append("select * from conta ");
-		sql.append("inner join unidadedesaude_conta on unidadedesaude_conta.contas_id = conta.id ");
-		sql.append("inner join unidadedesaude on unidadedesaude.id = unidadedesaude_conta.UnidadeDeSaude_id ");
-		sql.append("where conta.login = ? and conta.senha = md5(?) ");
+		sql.append("from UnidadeDeSaude as u ");
+		sql.append("where u.conta.login = :login and u.conta.senha = :senha");
 
-		Connection connection = ConnectionFactory.getConnection();
+		session = HibernateUtil.getSession();
 		try {
-			PreparedStatement ps = connection.prepareStatement(sql.toString());
-			ps.setString(1, u.getContas().get(0).getLogin().toUpperCase());
-			ps.setString(2, u.getContas().get(0).getSenha());
 
-			ResultSet rSet = ps.executeQuery();
+			Query query = session.createQuery(sql.toString());
+			query.setParameter("login", u.getConta().getLogin().toUpperCase());
+			query.setParameter("senha", EncryptMD5Util.getEncryptMD5(u.getConta().getSenha()));
 
-			if (rSet.next()) {
-				Conta conta = new Conta(rSet.getLong("contas_id"));
-				Perfil p = new Perfil(rSet.getLong("perfil_id"));
-				conta.setPerfil(p);
-				
-				unidade = new UnidadeDeSaude(rSet.getLong("UnidadeDeSaude_id"));
-				List<Conta> contas = new ArrayList<>();
-				contas.add(conta);
-				unidade.setContas(contas);
-				
-			}
+			unidade = new UnidadeDeSaude();
+			unidade = (UnidadeDeSaude) query.getSingleResult();
+
+
 
 		} catch (NoResultException nre) {
 			return null;
@@ -324,12 +347,7 @@ public class RepositoryDao implements IDAO {
 			System.out.println("Erro ao Pesquisar objeto no Banco de Dados - \n" + ex.getMessage());
 			return null;
 		} finally {
-			try {
-				connection.close();
-			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			session.close();
 		}
 
 		return unidade;
@@ -344,7 +362,7 @@ public class RepositoryDao implements IDAO {
         paciente = (Paciente) entidade;
 
         StringBuilder sql = new StringBuilder();
-        sql.append("INSERT INTO paciente ");
+        sql.append("INSERT INTO Paciente ");
         sql.append("(SIS, lastLogin, nome) VALUES (?,?,?) ");
 
         Connection con = ConnectionFactory.getConnection();
@@ -389,7 +407,7 @@ public class RepositoryDao implements IDAO {
     public void saveTabelaPacientesESolicitacoes(Long idPaciente, Long idSolicitacao) {
 
         StringBuilder sql = new StringBuilder();
-        sql.append("INSERT INTO paciente_solicitacao ");
+        sql.append("INSERT INTO Paciente_Solicitacao ");
         sql.append("(Paciente_id, solicitacoes_id) VALUES (?,?) ");
 
         Connection con = ConnectionFactory.getConnection();
